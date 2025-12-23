@@ -3,25 +3,22 @@ import { useAddHabitMutation } from "../../api/apiSlice";
 import categoryConfig from "../../utils/utilConsts";
 
 const createId = () => Date.now();
-  const categoriesArray = Object.entries(categoryConfig).map(([key, value]) => {
-    return {
-      id: key,
-      ...value,
-    };
-  });
+const categoriesArray = Object.entries(categoryConfig).map(([key, value]) => {
+  return {
+    id: key,
+    ...value,
+  };
+});
 
 function AddModal({ modalOpen, setModalOpen }) {
   const [titleInput, setTitleInput] = useState("");
   const [descInput, setDescInput] = useState("");
-  const [intervalOneInput, setIntervalOneInput] = useState('0');
-  const [intervalTwoInput, setIntervalTwoInput] = useState('0');
+  const [intervalOneInput, setIntervalOneInput] = useState("0");
   const [categoryOption, setCategoryOption] = useState("health");
   const [intervalOneShaking, setIntervalOneShaking] = useState(false);
-  const [intervalTwoShaking, setIntervalTwoShaking] = useState(false);
   const [titleShaking, setTitleShaking] = useState(false);
 
-  const [triggerAddHabit, { data: isLoading }] =
-    useAddHabitMutation();
+  const [triggerAddHabit, { isLoading }] = useAddHabitMutation();
 
   const intervalOneCheck = (value) => {
     if (value <= 10 && value >= 0) setIntervalOneInput(value);
@@ -30,14 +27,6 @@ function AddModal({ modalOpen, setModalOpen }) {
       setTimeout(() => setIntervalOneShaking(false), 400);
     }
   };
-  const intervalTwoCheck = (value) => {
-    if (value <= 7 && value >= 0) setIntervalTwoInput(value);
-    else {
-      setIntervalTwoShaking(true);
-      setTimeout(() => setIntervalTwoShaking(false), 400);
-    }
-  };
-
 
   const handleAdd = async () => {
     if (!titleInput.trim()) {
@@ -45,23 +34,28 @@ function AddModal({ modalOpen, setModalOpen }) {
       setTimeout(() => setTitleShaking(false), 400);
       return;
     }
-    await triggerAddHabit({
-      id: createId(),
-      title: titleInput,
-      desc: descInput,
-      interval: intervalOneInput + " в " + intervalTwoInput,
-      category: categoryOption,
-    }).unwrap();
-    setModalOpen(false); // Закрываем
-    resetForm();
+    try {
+      await triggerAddHabit({
+        id: createId(),
+        title: titleInput,
+        desc: descInput,
+        goal: Number(intervalOneInput),
+        category: categoryOption,
+      }).unwrap();
+      console.log("Успех!");
+      setModalOpen(false); // Закроется только если unwrap прошел успешно
+      resetForm();
+    } catch (err) {
+      console.error("Не удалось добавить привычку:", err);
+      // Тут можно вывести уведомление об ошибке пользователю
+    }
   };
 
   const resetForm = () => {
     setTitleInput("");
     setDescInput("");
     setCategoryOption("health");
-    setIntervalOneInput('0');
-    setIntervalTwoInput('0');
+    setIntervalOneInput("0");
   };
 
   return (
@@ -122,21 +116,7 @@ function AddModal({ modalOpen, setModalOpen }) {
                 value={intervalOneInput}
                 onChange={(e) => intervalOneCheck(e.target.value)}
               />
-              <p>раз в</p>
-              <input
-                className={`max-w-3/24  rounded-md px-1 border
-                ${
-                  intervalTwoShaking
-                    ? "border-amber-400 animate-shake bg-amber-200"
-                    : "border-slate-500 bg-slate-300"
-                }`}
-                type="number"
-                name=""
-                id=""
-                value={intervalTwoInput}
-                onChange={(e) => intervalTwoCheck(e.target.value)}
-              />
-              <p>д.</p>
+              <p>раз в неделю</p>
             </div>
             <select
               value={categoryOption}
@@ -154,12 +134,7 @@ function AddModal({ modalOpen, setModalOpen }) {
             <div className="flex w-full justify-around items-center">
               <button
                 disabled={
-                  isLoading ||
-                  !titleInput.trim() /* 
-                  intervalOneInput === 0 ||
-                  intervalTwoInput === 0 || */ ||
-                  intervalOneInput === "0" ||
-                  intervalTwoInput === "0"
+                  isLoading || !titleInput.trim() || intervalOneInput === "0"
                 }
                 onClick={handleAdd}
                 className={`py-3 rounded-lg border-2 w-5/12  disabled:opacity-50 transition-all 

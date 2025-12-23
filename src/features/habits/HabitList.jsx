@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useGetHabitsQuery } from "../../api/apiSlice";
 import AddModal from "./AddModal";
 import HabitCard from "./HabitCard";
-import sevenDays from "../../utils/dateHelper";
+import {sevenDays} from "../../utils/dateHelper";
 
 const weekDays = sevenDays() 
 
